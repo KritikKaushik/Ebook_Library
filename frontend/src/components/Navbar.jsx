@@ -1,14 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function Navbar() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    setUser(storedUser);
+  }, [location]);
 
   const isLoggedIn = !!user;
   const isAdmin = user?.role === "admin";
+  const isAuthor = user?.role === "author";
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    window.location.href = "/";
+    setUser(null);
+    navigate("/");
   };
 
   return (
@@ -25,6 +39,12 @@ function Navbar() {
             <Link to="/profile">
               Profile
             </Link>
+
+            {isAuthor && (
+              <Link to="/author-dashboard">
+                Author Dashboard
+              </Link>
+            )}
 
             {isAdmin && (
               <Link to="/admin">

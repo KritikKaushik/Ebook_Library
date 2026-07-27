@@ -48,7 +48,6 @@ const returnBook = async (req, res) => {
     const borrow = await Borrow.findOne({
       user: req.user._id,
       book: req.params.bookId,
-      status: "borrowed",
     });
 
     if (!borrow) {
@@ -57,10 +56,7 @@ const returnBook = async (req, res) => {
       });
     }
 
-    borrow.status = "returned";
-    borrow.returnDate = new Date();
-
-    await borrow.save();
+    await borrow.deleteOne();
 
     res.json({
       message: "Book returned successfully",
@@ -75,8 +71,26 @@ const returnBook = async (req, res) => {
 // User Borrowed Books
 const getBorrowedBooks = async (req, res) => {
   try {
+    // Clean orphaned borrow records
+    const allBorrows = await Borrow.find({
+      user: req.user._id,
+      status: "borrowed",
+    });
+
+    for (const borrow of allBorrows) {
+      const exists = await Book.exists({
+        _id: borrow.book,
+      });
+
+      if (!exists) {
+        await Borrow.findByIdAndDelete(borrow._id);
+      }
+    }
+
+    // Return only valid borrowed books
     const borrows = await Borrow.find({
       user: req.user._id,
+      status: "borrowed",
     })
       .populate({
         path: "book",
@@ -95,8 +109,43 @@ const getBorrowedBooks = async (req, res) => {
   }
 };
 
+// Admin - All Active Borrows
+const getAllBorrows = async (req, res) => {
+  try {
+    // Clean orphaned borrow records
+    const allBorrows = await Borrow.find({
+      status: "borrowed",
+    });
+
+    for (const borrow of allBorrows) {
+      const exists = await Book.exists({
+        _id: borrow.book,
+      });
+
+      if (!exists) {
+        await Borrow.findByIdAndDelete(borrow._id);
+      }
+    }
+
+    // Return valid borrow records
+    const borrows = await Borrow.find({
+      status: "borrowed",
+    })
+      .populate("user", "name email")
+      .populate("book", "title genre cover")
+      .sort({ createdAt: -1 });
+
+    res.json(borrows);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   borrowBook,
   returnBook,
   getBorrowedBooks,
+  getAllBorrows,
 };

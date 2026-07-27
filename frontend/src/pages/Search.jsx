@@ -1,115 +1,248 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { getBooks } from "../services/bookService";
 
 function Search() {
-  const [search, setSearch] = useState("");
-
-  const [allBooks, setAllBooks] = useState([]);
+  const [filters, setFilters] = useState({
+    search: "",
+    genre: "",
+    featured: false,
+  });
 
   const [books, setBooks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 0,
+  });
 
   useEffect(() => {
-    const loadBooks = async () => {
-      try {
-        const data = await getBooks();
-
-        setAllBooks(data);
-        setBooks(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    loadBooks();
+    loadBooks(1);
   }, []);
 
-  const handleSubmit = (e) => {
+  const loadBooks = async (page = 1) => {
+    try {
+      const data = await getBooks({
+        search: filters.search,
+        genre: filters.genre,
+        featured: filters.featured,
+        page,
+        limit: 6,
+      });
+
+      setBooks(data.books);
+      setCurrentPage(data.page);
+      setPagination({
+        page: data.page,
+        totalPages: data.totalPages,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]:
+        e.target.type === "checkbox"
+          ? e.target.checked
+          : e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    loadBooks(1);
+  };
 
-    const filteredBooks = allBooks.filter(
-      (book) =>
-        book.title
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        book.genre
-          .toLowerCase()
-          .includes(search.toLowerCase())
-    );
+  const handleReset = async () => {
+    const reset = {
+      search: "",
+      genre: "",
+      featured: false,
+    };
 
-    setBooks(filteredBooks);
+    setFilters(reset);
+
+    try {
+      const data = await getBooks({
+        page: 1,
+        limit: 6,
+      });
+
+      setBooks(data.books);
+      setCurrentPage(1);
+      setPagination({
+        page: data.page,
+        totalPages: data.totalPages,
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <>
-      <Navbar />
+    <div className="container">
+      <div className="card">
 
-      <div className="container">
-        <h1>Search Books</h1>
+        <h1 style={{ marginBottom: 10 }}>
+          📚 Search Books
+        </h1>
+
+        <p
+          style={{
+            color: "#6b7280",
+            marginBottom: 25,
+          }}
+        >
+          Search by title, genre or browse featured books.
+        </p>
 
         <form onSubmit={handleSubmit}>
+
           <input
             type="text"
             name="search"
-            value={search}
-            placeholder="Search by title or genre"
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
+            placeholder="🔍 Search by title..."
+            value={filters.search}
+            onChange={handleChange}
           />
 
-          <button type="submit">
-            Search
-          </button>
+          <input
+            type="text"
+            name="genre"
+            placeholder="🏷 Filter by genre..."
+            value={filters.genre}
+            onChange={handleChange}
+          />
+
+          <label className="featured-filter">
+            <input
+              type="checkbox"
+              name="featured"
+              checked={filters.featured}
+              onChange={handleChange}
+            />
+            Featured Books Only
+          </label>
+
+          <div className="button-group">
+            <button type="submit">
+              🔍 Search
+            </button>
+
+            <button
+              type="button"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
+          </div>
+
         </form>
-
-        {books.length > 0 ? (
-          <>
-            <h2>Books Found:</h2>
-
-            <div className="book-list-horizontal">
-              {books.map((book) => (
-                <div
-                  key={book._id}
-                  className="book-item"
-                >
-                  {book.cover && (
-                    <img
-                      src={`http://localhost:8000${book.cover}`}
-                      alt={book.title}
-                      width="150"
-                    />
-                  )}
-
-                  <h3>{book.title}</h3>
-
-                  <p>{book.genre}</p>
-
-                  <p>
-                    Author:{" "}
-                    {book.author?.name}
-                  </p>
-
-                  <Link
-                    to={`/book/${book._id}`}
-                  >
-                    View Book
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p>
-            No books found.
-          </p>
-        )}
       </div>
 
-      <Footer />
-    </>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          margin: "30px 0 20px",
+        }}
+      >
+        <h2>Books Found</h2>
+
+        <span style={{ color: "#666" }}>
+          {books.length} result{books.length !== 1 && "s"}
+        </span>
+      </div>
+
+      {books.length > 0 ? (
+        <div className="book-catalog">
+          {books.map((book) => (
+            <div
+              key={book._id}
+              className="book-item"
+            >
+              {book.cover ? (
+                <img
+                  src={`http://localhost:8000${book.cover}`}
+                  alt={book.title}
+                />
+              ) : (
+                <div
+                  style={{
+                    height: 150,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#f3f4f6",
+                    borderRadius: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  📘
+                </div>
+              )}
+
+              <h3>{book.title}</h3>
+
+              <p><strong>Genre:</strong> {book.genre}</p>
+
+              <p>
+                <strong>Author:</strong>{" "}
+                {book.author?.name || "Unknown"}
+              </p>
+
+              <Link to={`/book/${book._id}`}>
+                View Details
+              </Link>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card" style={{ textAlign: "center" }}>
+          <h3>No books found</h3>
+          <p>Try changing your search or filters.</p>
+        </div>
+      )}
+
+      {pagination.totalPages > 1 && (
+        <div
+          className="button-group"
+          style={{
+            justifyContent: "center",
+            marginTop: 35,
+          }}
+        >
+          <button
+            onClick={() => loadBooks(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            ← Previous
+          </button>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontWeight: 600,
+              padding: "0 20px",
+            }}
+          >
+            Page {pagination.page} of {pagination.totalPages}
+          </div>
+
+          <button
+            onClick={() => loadBooks(currentPage + 1)}
+            disabled={currentPage === pagination.totalPages}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

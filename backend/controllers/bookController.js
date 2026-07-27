@@ -1,4 +1,14 @@
 const Book = require("../models/Book");
+const Borrow = require("../models/Borrow");
+const Review = require("../models/Review");
+
+// Escape user input before using it in a MongoDB regular expression.
+const escapeRegex = (value) => {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+};
 
 // Create Book
 const createBook = async (req, res) => {
@@ -7,7 +17,9 @@ const createBook = async (req, res) => {
       title: req.body.title,
       genre: req.body.genre,
       content: req.body.content,
-      featured: req.body.featured || false,
+      featured:
+  req.body.featured === "true" ||
+  req.body.featured === true,
       cover: req.file
         ? `/uploads/covers/${req.file.filename}`
         : "",
@@ -28,11 +40,64 @@ const createBook = async (req, res) => {
 // Get All Books
 const getBooks = async (req, res) => {
   try {
-    const books = await Book.find()
-      .populate("author", "name email role")
-      .sort({ createdAt: -1 });
+    const {
+      search,
+      genre,
+      featured,
+      page = 1,
+      limit = 6,
+    } = req.query;
+    const query = {};
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const booksPerPage = Math.max(Number(limit) || 6, 1);
 
-    res.json(books);
+    if (search) {
+      const escapedSearch = escapeRegex(search);
+
+      query.$or = [
+        {
+          title: {
+            $regex: escapedSearch,
+            $options: "i",
+          },
+        },
+        {
+          genre: {
+            $regex: escapedSearch,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    if (genre) {
+      query.genre = {
+        $regex: escapeRegex(genre),
+        $options: "i",
+      };
+    }
+
+    if (featured === "true") {
+      query.featured = true;
+    }
+
+    const totalBooks = await Book.countDocuments(query);
+
+    // Skip the books that belong to earlier pages before limiting this page.
+    const skip = (currentPage - 1) * booksPerPage;
+
+    const books = await Book.find(query)
+      .populate("author", "name email role")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(booksPerPage);
+
+    res.json({
+      books,
+      page: currentPage,
+      totalPages: Math.ceil(totalBooks / booksPerPage),
+      totalBooks,
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -76,6 +141,7 @@ const getBookById = async (req, res) => {
 };
 
 // Delete Book
+// Delete Book
 const deleteBook = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -86,11 +152,92 @@ const deleteBook = async (req, res) => {
       });
     }
 
-    await book.deleteOne();
+    // Only author of the book or admin
+    if (
+      book.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
 
+    // Delete all borrow records related to this book
+   await Borrow.deleteMany({
+  book: book._id,
+});
+
+    // Delete all reviews related to this book
+await Review.deleteMany({
+  book: book._id,
+});
+
+// Mark all active borrows as returned
+await Borrow.updateMany(
+  {
+    book: book._id,
+    status: "borrowed",
+  },
+  {
+    $set: {
+      status: "returned",
+      returnDate: new Date(),
+    },
+  }
+);
+
+// Delete the book
+await book.deleteOne();
     res.json({
-      message: "Book deleted successfully",
+      message: "Book and all related records deleted successfully",
     });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+// Update Book
+const updateBook = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found",
+      });
+    }
+
+    // Only author of the book or admin can edit
+    if (
+      book.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
+
+    book.title = req.body.title || book.title;
+    book.genre = req.body.genre || book.genre;
+    book.content = req.body.content || book.content;
+
+    if (req.body.featured !== undefined) {
+  book.featured =
+    req.body.featured === "true" ||
+    req.body.featured === true;
+}
+
+    if (req.file) {
+      book.cover = `/uploads/covers/${req.file.filename}`;
+    }
+
+    await book.save();
+
+    const updatedBook = await Book.findById(book._id)
+      .populate("author", "name email role");
+
+    res.json(updatedBook);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -119,6 +266,7 @@ module.exports = {
   getBooks,
   getFeaturedBooks,
   getBookById,
+  updateBook,
   deleteBook,
-  getMyBooks
+  getMyBooks,
 };

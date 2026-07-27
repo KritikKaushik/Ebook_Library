@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Book = require("../models/Book");
 const Review = require("../models/Review");
+const Borrow = require("../models/Borrow");
 
 
 // ==================== USERS ====================
@@ -68,10 +69,21 @@ const deleteBookAdmin = async (req, res) => {
       });
     }
 
+    // Delete all related borrow records
+    await Borrow.deleteMany({
+      book: book._id,
+    });
+
+    // Delete all related reviews
+    await Review.deleteMany({
+      book: book._id,
+    });
+
+    // Delete the book
     await book.deleteOne();
 
     res.json({
-      message: "Book deleted successfully",
+      message: "Book and all related records deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
@@ -80,15 +92,14 @@ const deleteBookAdmin = async (req, res) => {
   }
 };
 
-
 // ==================== REVIEWS ====================
 
 const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
-      .populate("user", "name email")
-      .populate("book", "title")
-      .sort({ createdAt: -1 });
+  .populate("user", "name email")
+  .populate("book", "title genre cover")
+  .sort({ createdAt: -1 });
 
     res.json(reviews);
   } catch (error) {
@@ -120,9 +131,126 @@ const deleteReviewAdmin = async (req, res) => {
   }
 };
 
+// ==================== DASHBOARD ====================
+
+const getDashboardStats = async (req, res) => {
+  try {
+    const [
+      users,
+      authors,
+      admins,
+      books,
+      activeBorrows,
+      reviews,
+    ] = await Promise.all([
+      User.countDocuments({ role: "reader" }),
+      User.countDocuments({ role: "author" }),
+      User.countDocuments({ role: "admin" }),
+      Book.countDocuments(),
+      Borrow.countDocuments({ status: "borrowed" }),
+      Review.countDocuments(),
+    ]);
+
+    res.json({
+      users,
+      authors,
+      admins,
+      books,
+      activeBorrows,
+      reviews,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+//user management
+
+
+const updateUser = async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+const updateBookAdmin = async (req, res) => {
+  try {
+    const { title, genre, content } = req.body;
+
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found",
+      });
+    }
+
+    book.title = title ?? book.title;
+    book.genre = genre ?? book.genre;
+    book.content = content ?? book.content;
+
+    // Convert string "true"/"false" to boolean
+    if (req.body.featured !== undefined) {
+      book.featured =
+        req.body.featured === "true" ||
+        req.body.featured === true;
+    }
+
+    if (req.file) {
+      book.cover = `/uploads/covers/${req.file.filename}`;
+    }
+
+    await book.save();
+
+    const updatedBook = await Book.findById(book._id)
+      .populate("author", "name email role");
+
+    res.json(updatedBook);
+  } catch (error) {
+    console.error("updateBookAdmin Error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 
 module.exports = {
+  getDashboardStats,
+
   getAllUsers,
+  updateUser,
+  updateBookAdmin,
   deleteUser,
 
   getAllBooks,

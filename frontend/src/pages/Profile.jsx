@@ -1,277 +1,208 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import ReturnButton from "../components/ReturnButton";
-
-import { getProfile } from "../services/authService";
 import {
-  getMyBooks,
-  createBook,
-} from "../services/bookService";
-import { getBorrowedBooks } from "../services/borrowService";
+  getProfile,
+  updateProfile,
+  setRecoveryPasskey as updateRecoveryPasskey,
+} from "../services/authService";
 
 function Profile() {
   const [user, setUser] = useState(null);
-
-  const [borrowedBooks, setBorrowedBooks] =
-    useState([]);
-
-  const [uploadedBooks, setUploadedBooks] =
-    useState([]);
-
-  const [uploadForm, setUploadForm] =
-    useState({
-      title: "",
-      genre: "",
-      cover: null,
-      content: "",
-    });
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+  });
+  const [recoveryPasskey, setRecoveryPasskey] = useState("");
 
   useEffect(() => {
-    const loadProfile = async () => {
+    (async () => {
       try {
-        const profile =
-          await getProfile();
-
+        const profile = await getProfile();
         setUser(profile);
-
-        const borrowed =
-          await getBorrowedBooks();
-
-        setBorrowedBooks(borrowed);
-
-        if (
-          profile.role === "author" ||
-          profile.role === "admin"
-        ) {
-          const books =
-            await getMyBooks();
-
-          setUploadedBooks(books);
-        }
-      } catch (error) {
-        console.error(error);
+        setProfileForm({
+          name: profile.name,
+          email: profile.email,
+        });
+      } catch (err) {
+        console.error(err);
       }
-    };
-
-    loadProfile();
+    })();
   }, []);
 
-  const handleChange = (e) => {
-    setUploadForm({
-      ...uploadForm,
-      [e.target.name]:
-        e.target.type === "file"
-          ? e.target.files[0]
-          : e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const newBook =
-        await createBook(uploadForm);
+      const updated = await updateProfile(profileForm);
 
-      setUploadedBooks([
-        newBook,
-        ...uploadedBooks,
-      ]);
+      setUser(updated);
 
-      setUploadForm({
-        title: "",
-        genre: "",
-        cover: null,
-        content: "",
-      });
+      const stored = JSON.parse(localStorage.getItem("user"));
 
-      alert(
-        "Book uploaded successfully"
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...stored,
+          name: updated.name,
+          email: updated.email,
+        })
       );
-    } catch (error) {
-      alert(
-        error.response?.data
-          ?.message ||
-          "Upload failed"
-      );
+
+      alert("Profile updated successfully");
+    } catch (err) {
+      alert(err.response?.data?.message || "Profile update failed");
+    }
+  };
+
+  const handleRecovery = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await updateRecoveryPasskey(recoveryPasskey);
+      setRecoveryPasskey("");
+      alert(res.message);
+    } catch (err) {
+      alert(err.response?.data?.message || "Recovery update failed");
     }
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <div className="container">Loading...</div>;
   }
 
-  const isAuthor =
-    user.role === "author" ||
-    user.role === "admin";
-
   return (
-    <>
-      <Navbar />
+    <div className="container">
+      <div
+        className="card"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 20,
+          marginBottom: 30,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "#2563eb",
+              color: "#fff",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontSize: 32,
+              fontWeight: "bold",
+            }}
+          >
+            {user.name.charAt(0).toUpperCase()}
+          </div>
 
-      <div className="container">
-        <h2>Welcome, {user.name}</h2>
+          <div className="profile-info">
+            <h2 className="profile-name">{user.name}</h2>
 
-        <p>Email: {user.email}</p>
+            <div className="profile-meta">
+              <div className="profile-email">
+                <span>📧</span>
+                <span>{user.email}</span>
+              </div>
 
-        <p>Role: {user.role}</p>
+              <span className={`role-badge role-${user.role}`}>
+                {user.role}
+              </span>
+            </div>
+          </div>
+        </div>
 
-        <h3>Your Borrowed Books</h3>
-
-        {borrowedBooks.length > 0 ? (
-          <ul>
-            {borrowedBooks.map(
-              (borrow) => (
-                <li
-                  key={borrow._id}
-                >
-                  <h4>
-                    {
-                      borrow.book
-                        ?.title
-                    }
-                  </h4>
-
-                  <p>
-                    {
-                      borrow.book
-                        ?.genre
-                    }
-                  </p>
-
-                  <Link
-                    to={`/book/${borrow.book?._id}`}
-                  >
-                    View Book
-                  </Link>
-
-                  <ReturnButton
-                    bookId={
-                      borrow.book
-                        ?._id
-                    }
-                  />
-                </li>
-              )
-            )}
-          </ul>
-        ) : (
-          <p>
-            No borrowed books.
-          </p>
-        )}
-
-        {isAuthor && (
-          <>
-            <h3>
-              Upload a New Book
-            </h3>
-
-            <form
-              onSubmit={
-                handleSubmit
-              }
-            >
-              <input
-                type="text"
-                name="title"
-                placeholder="Book Title"
-                value={
-                  uploadForm.title
-                }
-                onChange={
-                  handleChange
-                }
-                required
-              />
-
-              <input
-                type="text"
-                name="genre"
-                placeholder="Genre"
-                value={
-                  uploadForm.genre
-                }
-                onChange={
-                  handleChange
-                }
-                required
-              />
-
-              <input
-                type="file"
-                name="cover"
-                onChange={
-                  handleChange
-                }
-              />
-
-              <textarea
-                name="content"
-                placeholder="Book Content"
-                value={
-                  uploadForm.content
-                }
-                onChange={
-                  handleChange
-                }
-                required
-              />
-
-              <button type="submit">
-                Upload Book
-              </button>
-            </form>
-
-            <h3>
-              Your Uploaded Books
-            </h3>
-
-            {uploadedBooks.length >
-            0 ? (
-              <ul>
-                {uploadedBooks.map(
-                  (book) => (
-                    <li
-                      key={
-                        book._id
-                      }
-                    >
-                      <h4>
-                        {
-                          book.title
-                        }
-                      </h4>
-
-                      <p>
-                        {
-                          book.genre
-                        }
-                      </p>
-
-                      <Link
-                        to={`/book/${book._id}`}
-                      >
-                        View
-                      </Link>
-                    </li>
-                  )
-                )}
-              </ul>
-            ) : (
-              <p>
-                No uploaded
-                books.
-              </p>
-            )}
-          </>
-        )}
+        <div style={{ textAlign: "right" }}>
+          <h3>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</h3>
+          <small>Account Type</small>
+        </div>
       </div>
 
-      <Footer />
-    </>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 25,
+        }}
+      >
+        <div className="card">
+          <h3 style={{ marginBottom: 20 }}>✏️ Edit Profile</h3>
+
+          <form onSubmit={handleProfileSubmit}>
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={profileForm.name}
+              onChange={(e) =>
+                setProfileForm({
+                  ...profileForm,
+                  name: e.target.value,
+                })
+              }
+              required
+            />
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={profileForm.email}
+              onChange={(e) =>
+                setProfileForm({
+                  ...profileForm,
+                  email: e.target.value,
+                })
+              }
+              required
+            />
+
+            <button type="submit">Save Changes</button>
+          </form>
+        </div>
+
+        <div className="card">
+          <h3 style={{ marginBottom: 20 }}>🔐 Recovery</h3>
+
+          <form onSubmit={handleRecovery}>
+            <input
+              type="password"
+              placeholder="Recovery Passkey"
+              value={recoveryPasskey}
+              onChange={(e) => setRecoveryPasskey(e.target.value)}
+              required
+            />
+
+            <button type="submit">Save</button>
+          </form>
+        </div>
+      </div>
+
+      {user.role === "author" && (
+        <div
+          className="card"
+          style={{
+            marginTop: 30,
+            borderLeft: "5px solid #2563eb",
+          }}
+        >
+          <h3>✍️ Author Dashboard</h3>
+
+          <p style={{ margin: "12px 0 20px" }}>
+            Upload, edit and manage your published books from your dashboard.
+          </p>
+
+          <Link to="/author-dashboard">
+            <button>Open Dashboard</button>
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 

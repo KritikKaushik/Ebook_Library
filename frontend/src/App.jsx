@@ -2,59 +2,77 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import RegisterAdmin from "./pages/RegisterAdmin";
 import BookDetails from "./pages/BookDetails";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import AdminPanel from "./pages/AdminPanel";
+import Recovery from "./pages/Recovery";
+import AccessDenied from "./pages/AccessDenied";
+import AuthorDashboard from "./pages/AuthorDashboard";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
+      <div className="app">
+        <Navbar />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        <main className="app-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+            <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/register-admin"
-          element={<RegisterAdmin />}
-        />
+            <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
+            <Route path="/recovery" element={<Recovery />} />
 
-        <Route
-          path="/search"
-          element={<Search />}
-        />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/admin"
-          element={<AdminPanel />}
-        />
+            <Route path="/search" element={<Search />} />
 
-        <Route
-          path="/book/:id"
-          element={<BookDetails />}
-        />
-      </Routes>
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <AdminPanel />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/book/:id"
+              element={<BookDetails />}
+            />
+
+            <Route
+              path="/author-dashboard"
+              element={<AuthorDashboard />}
+            />
+
+            <Route
+              path="/access-denied"
+              element={<AccessDenied />}
+            />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }

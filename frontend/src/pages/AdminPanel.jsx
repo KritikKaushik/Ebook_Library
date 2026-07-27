@@ -122,7 +122,7 @@ function AdminPanel() {
                     <>
                       {borrow.book.cover && (
                         <img
-                          src={`http://localhost:8000${borrow.book.cover}`}
+                          src={`https://ebook-library-d3kg.onrender.com${borrow.book.cover}`}
                           alt={borrow.book.title}
                         />
                       )}

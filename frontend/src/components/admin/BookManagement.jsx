@@ -113,7 +113,7 @@ function BookManagement({
                 <td>
                   {book.cover && (
                     <img
-                      src={`http://localhost:8000${book.cover}`}
+                      src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
                       alt={book.title}
                       style={{
                         width: 70,
@@ -177,7 +177,7 @@ function BookManagement({
                 <p><strong>Current Cover</strong></p>
 
                 <img
-                  src={`http://localhost:8000${editingBook.cover}`}
+                  src={`https://ebook-library-d3kg.onrender.com${editingBook.cover}`}
                   alt="Cover"
                   style={{
                     width: 140,

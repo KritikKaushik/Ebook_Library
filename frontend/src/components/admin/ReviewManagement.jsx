@@ -83,7 +83,7 @@ function ReviewManagement({
                   <>
                     {review.book.cover && (
                       <img
-                        src={`http://localhost:8000${review.book.cover}`}
+                        src={`https://ebook-library-d3kg.onrender.com${review.book.cover}`}
                         alt={review.book.title}
                       />
                     )}

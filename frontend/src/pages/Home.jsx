@@ -80,7 +80,7 @@ function Home() {
             <div key={book._id} className="book-item">
               {book.cover && (
                 <img
-                  src={`http://localhost:8000${book.cover}`}
+                  src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
                   alt={book.title}
                 />
               )}

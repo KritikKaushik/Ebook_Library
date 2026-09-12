@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import BorrowButton from "../components/BorrowButton";
@@ -21,6 +20,9 @@ function BookDetails() {
   });
 
   const user = JSON.parse(localStorage.getItem("user"));
+
+  // Backend URL from environment variable
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const loadBook = async () => {
@@ -64,7 +66,6 @@ function BookDetails() {
       });
 
       const updated = await getReviews(id);
-
       setReviews(updated);
 
       setReviewData({
@@ -77,47 +78,44 @@ function BookDetails() {
   };
 
   if (!book) {
-    return <div className="container">Loading...</div>;
+    return (
+      <div className="container">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (
     <div className="container">
 
-      {/* =================================================
-          BOOK INFORMATION
-          ================================================= */}
-
-      <div className="book-details-card">
+      {/* Book Details */}
+      <div className="card book-details-card">
 
         {/* Book Cover */}
-
         <div className="book-details-cover">
           {book.cover && (
             <img
-              src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
+              src={`${API_URL}${book.cover}`}
               alt={book.title}
             />
           )}
         </div>
 
         {/* Book Information */}
-
         <div className="book-details-info">
 
           <h1>{book.title}</h1>
 
           <div className="book-meta">
-
             <p>
               <strong>Genre:</strong>{" "}
-              <span>{book.genre}</span>
+              {book.genre}
             </p>
 
             <p>
               <strong>Author:</strong>{" "}
-              <span>{book.author?.name || "Unknown"}</span>
+              {book.author?.name || "Unknown"}
             </p>
-
           </div>
 
           <div className="book-description">
@@ -128,30 +126,22 @@ function BookDetails() {
             </p>
           </div>
 
+          {/* Actions */}
           {user && (
-            <div className="button-group book-actions">
-
-              <BorrowButton
-                bookId={book._id}
-              />
+            <div className="book-actions">
+              <BorrowButton bookId={book._id} />
 
               <WishlistButton
                 bookId={book._id}
                 isWishlisted={isWishlisted}
                 onWishlistChange={setIsWishlisted}
               />
-
             </div>
           )}
-
         </div>
       </div>
 
-
-      {/* =================================================
-          WRITE REVIEW
-          ================================================= */}
-
+      {/* Write Review */}
       {user && (
         <div className="card review-form-card">
 
@@ -188,11 +178,7 @@ function BookDetails() {
         </div>
       )}
 
-
-      {/* =================================================
-          REVIEWS
-          ================================================= */}
-
+      {/* Reviews */}
       <div className="card reviews-card">
 
         <h2>
@@ -235,7 +221,8 @@ function BookDetails() {
         ) : (
 
           <p className="no-reviews">
-            No reviews yet. Be the first to review this book.
+            No reviews yet. Be the first to review
+            this book.
           </p>
 
         )}
@@ -247,4 +234,3 @@ function BookDetails() {
 }
 
 export default BookDetails;
-

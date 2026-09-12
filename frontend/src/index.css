@@ -1385,3 +1385,399 @@ footer p {
     height: 34px;
   }
 }
+
+
+/* =========================================================
+   BOOK DETAILS
+   ========================================================= */
+
+.book-details-card {
+  display: grid;
+
+  grid-template-columns: 280px minmax(0, 1fr);
+
+  gap: 35px;
+
+  margin-bottom: 30px;
+
+  padding: 30px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* =========================================================
+   BOOK COVER
+   ========================================================= */
+
+.book-details-cover {
+  width: 100%;
+}
+
+.book-details-cover img {
+  display: block;
+
+  width: 100%;
+
+  height: 380px;
+
+  object-fit: cover;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 10px 25px rgba(52, 64, 56, 0.15);
+}
+
+
+/* =========================================================
+   BOOK INFORMATION
+   ========================================================= */
+
+.book-details-info {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: flex-start;
+}
+
+.book-details-info h1 {
+  margin-bottom: 18px;
+
+  color: var(--text-dark);
+
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+
+  line-height: 1.25;
+}
+
+
+/* =========================================================
+   BOOK META
+   ========================================================= */
+
+.book-meta {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-bottom: 25px;
+}
+
+.book-meta p {
+  margin: 0;
+
+  color: var(--text-light);
+
+  font-size: 15px;
+}
+
+.book-meta strong {
+  color: var(--text-dark);
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.book-description {
+  margin-bottom: 25px;
+}
+
+.book-description h3 {
+  margin-bottom: 10px;
+
+  color: var(--text-dark);
+
+  font-size: 17px;
+}
+
+.book-description p {
+  color: var(--text-light);
+
+  font-size: 15px;
+
+  line-height: 1.8;
+
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   BOOK ACTIONS
+   ========================================================= */
+
+.book-actions {
+  width: 100%;
+
+  max-width: 450px;
+
+  margin-top: auto;
+}
+
+.book-actions button {
+  min-height: 44px;
+}
+
+
+/* =========================================================
+   REVIEW FORM
+   ========================================================= */
+
+.review-form-card {
+  margin-bottom: 30px;
+}
+
+.review-form-card h2 {
+  margin-bottom: 20px;
+}
+
+.review-form-card form {
+  width: 100%;
+}
+
+.review-form-card textarea {
+  width: 100%;
+
+  min-height: 140px;
+
+  resize: vertical;
+}
+
+.review-form-card select {
+  width: 100%;
+
+  margin-bottom: 15px;
+}
+
+
+/* =========================================================
+   REVIEWS
+   ========================================================= */
+
+.reviews-card h2 {
+  margin-bottom: 20px;
+}
+
+.review-item {
+  padding: 18px 0;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 15px;
+
+  margin-bottom: 8px;
+}
+
+.review-header strong {
+  color: var(--text-dark);
+
+  font-size: 15px;
+}
+
+.review-rating {
+  white-space: nowrap;
+
+  font-size: 14px;
+}
+
+.review-item p {
+  color: var(--text-light);
+
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+}
+
+.no-reviews {
+  color: var(--text-light);
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  .book-details-card {
+    grid-template-columns: 220px minmax(0, 1fr);
+
+    gap: 25px;
+
+    padding: 24px;
+  }
+
+  .book-details-cover img {
+    height: 320px;
+  }
+
+  .book-details-info h1 {
+    font-size: 1.8rem;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .book-details-card {
+    grid-template-columns: 1fr;
+
+    gap: 25px;
+
+    padding: 20px;
+
+    text-align: center;
+  }
+
+
+  /* Center cover */
+
+  .book-details-cover {
+    display: flex;
+
+    justify-content: center;
+  }
+
+  .book-details-cover img {
+    width: min(220px, 75vw);
+
+    height: auto;
+
+    aspect-ratio: 2 / 3;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+  }
+
+
+  /* Information */
+
+  .book-details-info {
+    text-align: left;
+  }
+
+  .book-details-info h1 {
+    text-align: center;
+
+    font-size: 1.7rem;
+
+    margin-bottom: 15px;
+  }
+
+
+  /* Meta */
+
+  .book-meta {
+    padding: 15px;
+
+    background: var(--surface-soft);
+
+    border-radius: var(--radius-md);
+  }
+
+
+  /* Description */
+
+  .book-description {
+    margin-top: 5px;
+  }
+
+  .book-description h3 {
+    font-size: 16px;
+  }
+
+  .book-description p {
+    font-size: 14px;
+
+    line-height: 1.7;
+  }
+
+
+  /* Buttons */
+
+  .book-actions {
+    max-width: none;
+
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .book-actions button {
+    width: 100%;
+  }
+
+
+  /* Reviews */
+
+  .review-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 5px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 400px) {
+
+  .book-details-card {
+    padding: 16px;
+  }
+
+  .book-details-cover img {
+    width: 180px;
+  }
+
+  .book-details-info h1 {
+    font-size: 1.5rem;
+  }
+
+  .book-meta p {
+    font-size: 13px;
+  }
+
+  .review-item p {
+    font-size: 14px;
+  }
+
+}

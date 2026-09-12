@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import BorrowButton from "../components/BorrowButton";
@@ -32,6 +33,7 @@ function BookDetails() {
 
         if (user) {
           const wishlist = await getWishlist();
+
           setIsWishlisted(
             wishlist.some((item) => item._id === id)
           );
@@ -62,6 +64,7 @@ function BookDetails() {
       });
 
       const updated = await getReviews(id);
+
       setReviews(updated);
 
       setReviewData({
@@ -79,70 +82,83 @@ function BookDetails() {
 
   return (
     <div className="container">
-      <div
-        className="card"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "280px 1fr",
-          gap: 30,
-          marginBottom: 30,
-        }}
-      >
-        <div>
+
+      {/* =================================================
+          BOOK INFORMATION
+          ================================================= */}
+
+      <div className="book-details-card">
+
+        {/* Book Cover */}
+
+        <div className="book-details-cover">
           {book.cover && (
             <img
               src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
               alt={book.title}
-              style={{
-                width: "100%",
-                height: 380,
-                objectFit: "cover",
-                borderRadius: 12,
-              }}
             />
           )}
         </div>
 
-        <div>
+        {/* Book Information */}
+
+        <div className="book-details-info">
+
           <h1>{book.title}</h1>
 
-          <p style={{ margin: "12px 0" }}>
-            <strong>Genre:</strong> {book.genre}
-          </p>
+          <div className="book-meta">
 
-          <p style={{ marginBottom: 20 }}>
-            <strong>Author:</strong> {book.author?.name}
-          </p>
+            <p>
+              <strong>Genre:</strong>{" "}
+              <span>{book.genre}</span>
+            </p>
 
-          <p
-            style={{
-              lineHeight: 1.7,
-              marginBottom: 25,
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {book.content}
-          </p>
+            <p>
+              <strong>Author:</strong>{" "}
+              <span>{book.author?.name || "Unknown"}</span>
+            </p>
+
+          </div>
+
+          <div className="book-description">
+            <h3>About this book</h3>
+
+            <p>
+              {book.content}
+            </p>
+          </div>
 
           {user && (
-            <div className="button-group">
-              <BorrowButton bookId={book._id} />
+            <div className="button-group book-actions">
+
+              <BorrowButton
+                bookId={book._id}
+              />
 
               <WishlistButton
                 bookId={book._id}
                 isWishlisted={isWishlisted}
                 onWishlistChange={setIsWishlisted}
               />
+
             </div>
           )}
+
         </div>
       </div>
 
+
+      {/* =================================================
+          WRITE REVIEW
+          ================================================= */}
+
       {user && (
-        <div className="card" style={{ marginBottom: 30 }}>
-          <h2 style={{ marginBottom: 20 }}>Write a Review</h2>
+        <div className="card review-form-card">
+
+          <h2>Write a Review</h2>
 
           <form onSubmit={handleSubmitReview}>
+
             <textarea
               name="review"
               placeholder="Share your thoughts about this book..."
@@ -157,9 +173,9 @@ function BookDetails() {
               value={reviewData.rating}
               onChange={handleChange}
             >
-              {[5,4,3,2,1].map((r)=>(
+              {[5, 4, 3, 2, 1].map((r) => (
                 <option key={r} value={r}>
-                  {r} Star{r>1?"s":""}
+                  {r} Star{r > 1 ? "s" : ""}
                 </option>
               ))}
             </select>
@@ -167,46 +183,68 @@ function BookDetails() {
             <button type="submit">
               Submit Review
             </button>
+
           </form>
         </div>
       )}
 
-      <div className="card">
-        <h2 style={{ marginBottom: 20 }}>
+
+      {/* =================================================
+          REVIEWS
+          ================================================= */}
+
+      <div className="card reviews-card">
+
+        <h2>
           Reviews ({reviews.length})
         </h2>
 
         {reviews.length > 0 ? (
-          reviews.map((review) => (
-            <div
-              key={review._id}
-              style={{
-                padding: "18px 0",
-                borderBottom: "1px solid #e5e7eb",
-              }}
-            >
+
+          <div className="reviews-list">
+
+            {reviews.map((review) => (
+
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
-                }}
+                key={review._id}
+                className="review-item"
               >
-                <strong>{review.user?.name}</strong>
-                <span>{"⭐".repeat(review.rating)}</span>
+
+                <div className="review-header">
+
+                  <strong>
+                    {review.user?.name || "Anonymous"}
+                  </strong>
+
+                  <span className="review-rating">
+                    {"⭐".repeat(review.rating)}
+                  </span>
+
+                </div>
+
+                <p>
+                  {review.review}
+                </p>
+
               </div>
 
-              <p style={{ lineHeight: 1.6 }}>
-                {review.review}
-              </p>
-            </div>
-          ))
+            ))}
+
+          </div>
+
         ) : (
-          <p>No reviews yet. Be the first to review this book.</p>
+
+          <p className="no-reviews">
+            No reviews yet. Be the first to review this book.
+          </p>
+
         )}
+
       </div>
+
     </div>
   );
 }
 
 export default BookDetails;
+

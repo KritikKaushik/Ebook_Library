@@ -42,26 +42,41 @@ function Home() {
   return (
     <div className="container">
 
-      <div className="card" style={{ marginBottom: "35px" }}>
-        <h1 style={{ marginBottom: "10px" }}>
-          📚 Welcome to the E-Book Library
-        </h1>
+<div className="library-hero">
+  <h1>📚 Welcome to the E-Book Library</h1>
 
-        <p style={{ color: "#6b7280", marginBottom: "25px" }}>
-          Discover, borrow and enjoy books from different authors.
-        </p>
+  <p>
+    Discover, borrow and enjoy books from different authors.
+  </p>
 
-        <input
-          type="text"
-          placeholder="🔍 Search by title or genre..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
+  <div className="library-search">
+    <span className="search-icon">⌕</span>
 
+    <input
+      type="text"
+      placeholder="Search books by title, author or genre..."
+      value={search}
+      onChange={(e) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+      }}
+    />
+
+    {search && (
+      <button
+        type="button"
+        className="search-clear"
+        onClick={() => {
+          setSearch("");
+          setCurrentPage(1);
+        }}
+        aria-label="Clear search"
+      >
+        ×
+      </button>
+    )}
+  </div>
+</div>
       <div
         style={{
           display: "flex",
@@ -80,7 +95,7 @@ function Home() {
             <div key={book._id} className="book-item">
               {book.cover && (
                 <img
-                  src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
+                  src={`http://localhost:8000${book.cover}`}
                   alt={book.title}
                 />
               )}
@@ -116,7 +131,7 @@ function Home() {
             <div key={book._id} className="book-item">
               {book.cover && (
                 <img
-                  src={`https://ebook-library-d3kg.onrender.com${book.cover}`}
+                  src={`http://localhost:8000${book.cover}`}
                   alt={book.title}
                 />
               )}

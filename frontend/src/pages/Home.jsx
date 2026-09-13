@@ -43,7 +43,7 @@ function Home() {
     <div className="container">
 
 <div className="library-hero">
-  <h1>📚 Welcome to the E-Book Library</h1>
+  <h1>📚 Welcome to the LibraX Digital Library Platform</h1>
 
   <p>
     Discover, borrow and enjoy books from different authors.

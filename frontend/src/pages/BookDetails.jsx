@@ -22,7 +22,7 @@ function BookDetails() {
   const user = JSON.parse(localStorage.getItem("user"));
 
   // Backend URL from environment variable
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = "https://ebook-library-d3kg.onrender.com";
 
   useEffect(() => {
     const loadBook = async () => {

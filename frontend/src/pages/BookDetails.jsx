@@ -21,9 +21,6 @@ function BookDetails() {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Backend URL from environment variable
-  const API_URL = "https://ebook-library-d3kg.onrender.com";
-
   useEffect(() => {
     const loadBook = async () => {
       try {
@@ -85,6 +82,15 @@ function BookDetails() {
     );
   }
 
+  const backendUrl = "https://ebook-library-d3kg.onrender.com";
+
+  // Handle cover path
+  const coverUrl = book.cover
+    ? book.cover.startsWith("http")
+      ? book.cover
+      : `${backendUrl}${book.cover}`
+    : null;
+
   return (
     <div className="container">
 
@@ -93,11 +99,17 @@ function BookDetails() {
 
         {/* Book Cover */}
         <div className="book-details-cover">
-          {book.cover && (
+          {coverUrl ? (
             <img
-              src={`${API_URL}${book.cover}`}
+              src={coverUrl}
               alt={book.title}
+              onError={(e) => {
+                console.error("Image failed to load:", coverUrl);
+                e.target.style.display = "none";
+              }}
             />
+          ) : (
+            <p>No cover available</p>
           )}
         </div>
 
@@ -121,9 +133,7 @@ function BookDetails() {
           <div className="book-description">
             <h3>About this book</h3>
 
-            <p>
-              {book.content}
-            </p>
+            <p>{book.content}</p>
           </div>
 
           {/* Actions */}
@@ -186,11 +196,9 @@ function BookDetails() {
         </h2>
 
         {reviews.length > 0 ? (
-
           <div className="reviews-list">
 
             {reviews.map((review) => (
-
               <div
                 key={review._id}
                 className="review-item"
@@ -208,23 +216,16 @@ function BookDetails() {
 
                 </div>
 
-                <p>
-                  {review.review}
-                </p>
+                <p>{review.review}</p>
 
               </div>
-
             ))}
 
           </div>
-
         ) : (
-
           <p className="no-reviews">
-            No reviews yet. Be the first to review
-            this book.
+            No reviews yet. Be the first to review this book.
           </p>
-
         )}
 
       </div>
